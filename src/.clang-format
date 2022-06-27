@@ -1,0 +1,9 @@
+﻿---
+BreakBeforeBraces: Allman
+AlignConsecutiveMacros: true
+IndentWidth: 2
+ObjCBlockIndentWidth: 2
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 2
+
+...

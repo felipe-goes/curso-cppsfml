@@ -1,0 +1,5 @@
+.cache/
+include/SFML
+build/
+debug/
+
