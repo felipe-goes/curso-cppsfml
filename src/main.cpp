@@ -8,6 +8,7 @@ int main()
   std::srand(std::time(nullptr));
 
   sf::RenderWindow window(sf::VideoMode(1280, 720), "Minecrap - 0.1");
+  window.setFramerateLimit(60);
 
   sf::RectangleShape object;
   object.setSize(sf::Vector2f(100.f, 100.f));
@@ -16,6 +17,11 @@ int main()
   float x = static_cast<float>(std::experimental::randint(
     10, static_cast<int>(window.getSize().x - object.getSize().x)));
   object.setPosition(x, 10.f);
+
+  sf::Vector2i pos_mouse_win; // Posição do mouse em relação a janela(window)
+  sf::Vector2f pos_mouse_coord; // Armazenará as coordenadas mapeadas
+
+  int points{}; // maneira moderna de inicializar com 0
 
   // Dessa forma, usando a biblioteca <memory> podemos criar ponteiros na Heap
   // sem precisar rodar o delete e atribuir nulo ao ponteiro. Isso se chama
@@ -35,6 +41,20 @@ int main()
       {
         window.close();
       }
+
+      pos_mouse_win = sf::Mouse::getPosition(window);
+      pos_mouse_coord = window.mapPixelToCoords(pos_mouse_win);
+    }
+
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+    {
+      if (object.getGlobalBounds().contains(pos_mouse_coord))
+      {
+        x = static_cast<float>(std::experimental::randint(
+          10, static_cast<int>(window.getSize().x - object.getSize().x)));
+        object.setPosition(x, 10.f);
+        std::cout << "Sua pontuação agore é: " << ++points << '\n';
+      }
     }
 
     if (object.getPosition().y > window.getSize().y)
@@ -43,7 +63,7 @@ int main()
         10, static_cast<int>(window.getSize().x - object.getSize().x)));
       object.setPosition(x, 10.f);
     }
-    object.move(0.f, 0.4f);
+    object.move(0.f, 5.f);
 
     window.clear();
     window.draw(object);
