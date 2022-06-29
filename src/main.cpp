@@ -21,7 +21,13 @@ int main()
   sf::Vector2i pos_mouse_win; // Posição do mouse em relação a janela(window)
   sf::Vector2f pos_mouse_coord; // Armazenará as coordenadas mapeadas
 
-  int points{}; // maneira moderna de inicializar com 0
+  int points{}, health = 3; // maneira moderna de inicializar com 0
+
+  // OBJETOS
+  std::vector<sf::RectangleShape> objs;
+  const size_t max_objs = 5;
+  const float obj_vel_max = 10.f;
+  float obj_vel = obj_vel_max;
 
   // Dessa forma, usando a biblioteca <memory> podemos criar ponteiros na Heap
   // sem precisar rodar o delete e atribuir nulo ao ponteiro. Isso se chama
@@ -46,27 +52,62 @@ int main()
       pos_mouse_coord = window.mapPixelToCoords(pos_mouse_win);
     }
 
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+    // Adicionar objects ao nosso vector com atrasos
+    if (objs.size() < max_objs)
     {
-      if (object.getGlobalBounds().contains(pos_mouse_coord))
+      if (obj_vel >= obj_vel_max)
       {
         x = static_cast<float>(std::experimental::randint(
           10, static_cast<int>(window.getSize().x - object.getSize().x)));
-        object.setPosition(x, 10.f);
-        std::cout << "Sua pontuação agore é: " << ++points << '\n';
+        object.setPosition(x, 0.f);
+        objs.push_back(object);
+        obj_vel = 0.f;
+      }
+      else
+      {
+        obj_vel += 1.f;
       }
     }
 
-    if (object.getPosition().y > window.getSize().y)
+    // Mover e deletar os objetos do vetor
+    for (int i{}; i < objs.size(); ++i)
     {
-      x = static_cast<float>(std::experimental::randint(
-        10, static_cast<int>(window.getSize().x - object.getSize().x)));
-      object.setPosition(x, 10.f);
+      bool del = false;
+      objs[i].move(0.f, 5.f);
+
+      if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+      {
+        if (objs[i].getGlobalBounds().contains(pos_mouse_coord))
+        {
+          del = true;
+          points += 10.f;
+          std::cout << "Pontuação: " << points << '\n';
+        }
+      }
+
+      if (objs[i].getPosition().y > window.getSize().y)
+      {
+        --health;
+        del = true;
+        if (health <= 0)
+        {
+          std::cout << "Pontuação: " << points << '\n';
+          std::cout << "GAME OVER, Vidas: " << health << '\n';
+          window.close();
+        }
+      }
+
+      if (del)
+      {
+        objs.erase(objs.begin() + i);
+      }
     }
-    object.move(0.f, 5.f);
 
     window.clear();
-    window.draw(object);
+    for (auto &e : objs)
+    {
+      window.draw(e);
+    }
     window.display();
   }
 
