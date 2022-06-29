@@ -10,12 +10,13 @@ int main()
   sf::RenderWindow window(sf::VideoMode(1280, 720), "Minecrap - 0.1");
   window.setFramerateLimit(60);
 
-  sf::RectangleShape object;
-  object.setSize(sf::Vector2f(100.f, 100.f));
-  object.setFillColor(sf::Color(0, 255, 0));
+  sf::Texture texture;
+  texture.loadFromFile("../resources/imgs/minecrap.png");
+
+  sf::Sprite object(texture);
 
   float x = static_cast<float>(std::experimental::randint(
-    10, static_cast<int>(window.getSize().x - object.getSize().x)));
+    10, static_cast<int>(window.getSize().x - texture.getSize().x)));
   object.setPosition(x, 10.f);
 
   sf::Vector2i pos_mouse_win; // Posição do mouse em relação a janela(window)
@@ -24,7 +25,7 @@ int main()
   int points{}, health = 3; // maneira moderna de inicializar com 0
 
   // OBJETOS
-  std::vector<sf::RectangleShape> objs;
+  std::vector<sf::Sprite> objs;
   const size_t max_objs = 5;
   const float obj_vel_max = 10.f;
   float obj_vel = obj_vel_max;
@@ -48,6 +49,12 @@ int main()
         window.close();
       }
 
+      if (event.type == sf::Event::Resized)
+      {
+        sf::FloatRect visible_area(0, 0, event.size.width, event.size.height);
+        window.setView(sf::View(visible_area));
+      }
+
       pos_mouse_win = sf::Mouse::getPosition(window);
       pos_mouse_coord = window.mapPixelToCoords(pos_mouse_win);
     }
@@ -58,7 +65,7 @@ int main()
       if (obj_vel >= obj_vel_max)
       {
         x = static_cast<float>(std::experimental::randint(
-          10, static_cast<int>(window.getSize().x - object.getSize().x)));
+          10, static_cast<int>(window.getSize().x - texture.getSize().x)));
         object.setPosition(x, 0.f);
         objs.push_back(object);
         obj_vel = 0.f;
