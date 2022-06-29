@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
 #include <ctime>
 #include <experimental/random> // se tiver no windows use o <ctime> std::rand()
 #include <iostream>
@@ -7,13 +8,34 @@ int main()
 {
   std::srand(std::time(nullptr));
 
-  sf::RenderWindow window(sf::VideoMode(1280, 720), "Minecrap - 0.1");
+  sf::RenderWindow window(sf::VideoMode(1280, 720), "Minecrap - 0.1",
+                          sf::Style::Titlebar | sf::Style::Close);
   window.setFramerateLimit(60);
+  window.setPosition(sf::Vector2i(0, 0));
 
-  sf::Texture texture;
+  int points{}, health = 5; // maneira moderna de inicializar com 0
+
+  sf::Font font;
+  font.loadFromFile("../resources/fonts/Minecraft.ttf");
+  sf::Text score, life;
+
+  // score
+  score.setFont(font);
+  score.setString("Pontos: " + std::to_string(points));
+  score.setFillColor(sf::Color::White);
+  score.setPosition(5.f, 5.f);
+
+  // life
+  life.setFont(font);
+  life.setString("Vidas: " + std::to_string(health));
+  life.setFillColor(sf::Color::White);
+  life.setPosition(1130.f, 5.f);
+
+  sf::Texture texture, bg;
   texture.loadFromFile("../resources/imgs/minecrap.png");
+  bg.loadFromFile("../resources/imgs/fundo.jpg");
 
-  sf::Sprite object(texture);
+  sf::Sprite object(texture), fundo(bg);
 
   float x = static_cast<float>(std::experimental::randint(
     10, static_cast<int>(window.getSize().x - texture.getSize().x)));
@@ -21,8 +43,6 @@ int main()
 
   sf::Vector2i pos_mouse_win; // Posição do mouse em relação a janela(window)
   sf::Vector2f pos_mouse_coord; // Armazenará as coordenadas mapeadas
-
-  int points{}, health = 3; // maneira moderna de inicializar com 0
 
   // OBJETOS
   std::vector<sf::Sprite> objs;
@@ -88,13 +108,14 @@ int main()
         {
           del = true;
           points += 10.f;
-          std::cout << "Pontuação: " << points << '\n';
+          score.setString("Pontos: " + std::to_string(points));
         }
       }
 
       if (objs[i].getPosition().y > window.getSize().y)
       {
         --health;
+        life.setString("Vidas: " + std::to_string(health));
         del = true;
         if (health <= 0)
         {
@@ -111,6 +132,9 @@ int main()
     }
 
     window.clear();
+    window.draw(fundo);
+    window.draw(score);
+    window.draw(life);
     for (auto &e : objs)
     {
       window.draw(e);
