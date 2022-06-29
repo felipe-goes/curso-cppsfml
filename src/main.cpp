@@ -12,10 +12,14 @@ int main()
                           sf::Style::Titlebar | sf::Style::Close);
   window.setFramerateLimit(60);
   window.setPosition(sf::Vector2i(0, 0));
+  window.setMouseCursorVisible(false);
 
+  bool pressed = false;
   int points{}, health = 5; // maneira moderna de inicializar com 0
+  float velocity = 5.f;
 
   sf::Font font;
+
   font.loadFromFile("../resources/fonts/Minecraft.ttf");
   sf::Text score, life;
 
@@ -31,11 +35,12 @@ int main()
   life.setFillColor(sf::Color::White);
   life.setPosition(1130.f, 5.f);
 
-  sf::Texture texture, bg;
+  sf::Texture texture, bg, hammer;
   texture.loadFromFile("../resources/imgs/minecrap.png");
   bg.loadFromFile("../resources/imgs/fundo.jpg");
+  hammer.loadFromFile("../resources/imgs/hammer.png");
 
-  sf::Sprite object(texture), fundo(bg);
+  sf::Sprite object(texture), fundo(bg), ham(hammer);
 
   float x = static_cast<float>(std::experimental::randint(
     10, static_cast<int>(window.getSize().x - texture.getSize().x)));
@@ -75,8 +80,14 @@ int main()
         window.setView(sf::View(visible_area));
       }
 
+      if (event.type == event.MouseButtonPressed)
+      {
+        pressed = false;
+      }
+
       pos_mouse_win = sf::Mouse::getPosition(window);
       pos_mouse_coord = window.mapPixelToCoords(pos_mouse_win);
+      ham.setPosition(static_cast<sf::Vector2f>(pos_mouse_win));
     }
 
     // Adicionar objects ao nosso vector com atrasos
@@ -100,15 +111,27 @@ int main()
     for (int i{}; i < objs.size(); ++i)
     {
       bool del = false;
-      objs[i].move(0.f, 5.f);
+      objs[i].move(0.f, velocity);
 
-      if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+      if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !pressed)
       {
         if (objs[i].getGlobalBounds().contains(pos_mouse_coord))
         {
           del = true;
           points += 10.f;
           score.setString("Pontos: " + std::to_string(points));
+          pressed = true;
+          if (points % 100 == 0)
+          {
+            velocity += 0.1f;
+            std::cout << "Aumentou a velocidade e agora ela é: " << velocity
+                      << '\n';
+          }
+          if (points % 200 == 0)
+          {
+            ++health;
+            std::cout << "Ganhou mais uma vida: " << health << '\n';
+          }
         }
       }
 
@@ -139,6 +162,7 @@ int main()
     {
       window.draw(e);
     }
+    window.draw(ham);
     window.display();
   }
 
