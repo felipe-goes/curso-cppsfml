@@ -1,3 +1,5 @@
+#include "SFML/Audio/Music.hpp"
+#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <ctime>
@@ -13,6 +15,16 @@ int main()
   window.setFramerateLimit(60);
   window.setPosition(sf::Vector2i(0, 0));
   window.setMouseCursorVisible(false);
+
+  // MUSICA E SONOPLASTIA(EFEITOS DE SOM OU FX)
+  sf::SoundBuffer pop, gameover_buffer;
+  pop.loadFromFile("../resources/sounds/pop.wav");
+  gameover_buffer.loadFromFile("../resources/sounds/game-over-sound.wav");
+
+  sf::Sound pop_sound(pop), gameover_sound(gameover_buffer);
+
+  sf::Music music;
+  music.openFromFile("../resources/sounds/soundtrack.wav");
 
   bool pressed = false, gameover = false, paused = false;
   int points{}, health = 5; // maneira moderna de inicializar com 0
@@ -87,6 +99,11 @@ int main()
   while (window.isOpen())
   {
     sf::Event event;
+    if (music.getStatus() == sf::Music::Stopped ||
+        music.getStatus() == sf::Music::Paused)
+    {
+      music.play();
+    }
 
     while (window.pollEvent(event))
     {
@@ -119,6 +136,7 @@ int main()
 
     if (gameover)
     {
+      music.stop();
       window.setMouseCursorVisible(true);
       window.clear(sf::Color::Black);
       window.draw(score);
@@ -145,6 +163,7 @@ int main()
     {
       if (paused)
       {
+        music.pause();
         window.clear();
         window.draw(stop_sprite);
         window.draw(paused_text);
@@ -187,6 +206,7 @@ int main()
           {
             if (objs[i].getGlobalBounds().contains(pos_mouse_coord))
             {
+              pop_sound.play();
               del = true;
               points += 10.f;
               score.setString("Pontos: " + std::to_string(points));
@@ -212,6 +232,7 @@ int main()
             del = true;
             if (health <= 0)
             {
+              gameover_sound.play();
               std::cout << "Pontuação: " << points << '\n';
               std::cout << "GAME OVER, Vidas: " << health << '\n';
               // window.close();
