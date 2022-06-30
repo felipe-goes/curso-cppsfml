@@ -1,4 +1,3 @@
-#include "SFML/Graphics/Color.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <ctime>
@@ -15,19 +14,25 @@ int main()
   window.setPosition(sf::Vector2i(0, 0));
   window.setMouseCursorVisible(false);
 
-  bool pressed = false, gameover = false;
+  bool pressed = false, gameover = false, paused = false;
   int points{}, health = 5; // maneira moderna de inicializar com 0
   float velocity = 5.f;
 
   sf::Font font, jet;
   font.loadFromFile("../resources/fonts/Minecraft.ttf");
   jet.loadFromFile("../resources/fonts/jetbrains.ttf");
-  sf::Text score, life, gameover_text, f1;
+  sf::Text score, life, gameover_text, f1, paused_text;
 
   f1.setFont(jet);
   f1.setFillColor(sf::Color::Yellow);
   f1.setPosition(600, 10);
   f1.setString("Pressione F1 para um novo jogo.");
+
+  paused_text.setFont(jet);
+  paused_text.setFillColor(sf::Color::White);
+  paused_text.setString("PAUSED");
+  paused_text.setPosition(350, 300);
+  paused_text.setCharacterSize(180);
 
   // gameover
   gameover_text.setFont(font);
@@ -48,12 +53,13 @@ int main()
   life.setFillColor(sf::Color::White);
   life.setPosition(1130.f, 5.f);
 
-  sf::Texture texture, bg, hammer;
+  sf::Texture texture, bg, hammer, stop;
   texture.loadFromFile("../resources/imgs/minecrap.png");
   bg.loadFromFile("../resources/imgs/fundo.jpg");
   hammer.loadFromFile("../resources/imgs/hammer.png");
+  stop.loadFromFile("../resources/imgs/paused.jpg");
 
-  sf::Sprite object(texture), fundo(bg), ham(hammer);
+  sf::Sprite object(texture), fundo(bg), ham(hammer), stop_sprite(stop);
 
   float x = static_cast<float>(std::experimental::randint(
     10, static_cast<int>(window.getSize().x - texture.getSize().x)));
@@ -67,6 +73,8 @@ int main()
   const size_t max_objs = 5;
   const float obj_vel_max = 10.f;
   float obj_vel = obj_vel_max;
+
+  sf::Vector2i current_position;
 
   // Dessa forma, usando a biblioteca <memory> podemos criar ponteiros na Heap
   // sem precisar rodar o delete e atribuir nulo ao ponteiro. Isso se chama
@@ -95,7 +103,13 @@ int main()
 
       if (event.type == event.MouseButtonPressed)
       {
+        current_position = sf::Mouse::getPosition(window);
         pressed = false;
+      }
+
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Return))
+      {
+        paused = true;
       }
 
       pos_mouse_win = sf::Mouse::getPosition(window);
@@ -129,82 +143,99 @@ int main()
     }
     else
     {
-      // CÓDIGO DO GAME
-      // Adicionar objects ao nosso vector com atrasos
-      if (objs.size() < max_objs)
+      if (paused)
       {
-        if (obj_vel >= obj_vel_max)
+        window.clear();
+        window.draw(stop_sprite);
+        window.draw(paused_text);
+        window.display();
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
         {
-          x = static_cast<float>(std::experimental::randint(
-            10, static_cast<int>(window.getSize().x - texture.getSize().x)));
-          object.setPosition(x, 0.f);
-          objs.push_back(object);
-          obj_vel = 0.f;
+          paused = false;
         }
-        else
-        {
-          obj_vel += 1.f;
-        }
+        ham.setPosition(static_cast<sf::Vector2f>(current_position));
       }
-
-      // Mover e deletar os objetos do vetor
-      for (int i{}; i < objs.size(); ++i)
+      else
       {
-        bool del = false;
-        objs[i].move(0.f, velocity);
+        // CÓDIGO DO GAME
 
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !pressed)
+        // Adicionar objects ao nosso vector com atrasos
+        if (objs.size() < max_objs)
         {
-          if (objs[i].getGlobalBounds().contains(pos_mouse_coord))
+          if (obj_vel >= obj_vel_max)
           {
+            x = static_cast<float>(std::experimental::randint(
+              10, static_cast<int>(window.getSize().x - texture.getSize().x)));
+            object.setPosition(x, 0.f);
+            objs.push_back(object);
+            obj_vel = 0.f;
+          }
+          else
+          {
+            obj_vel += 1.f;
+          }
+        }
+
+        // Mover e deletar os objetos do vetor
+        for (int i{}; i < objs.size(); ++i)
+        {
+          bool del = false;
+          objs[i].move(0.f, velocity);
+
+          if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !pressed)
+          {
+            if (objs[i].getGlobalBounds().contains(pos_mouse_coord))
+            {
+              del = true;
+              points += 10.f;
+              score.setString("Pontos: " + std::to_string(points));
+              pressed = true;
+              if (points % 100 == 0)
+              {
+                velocity += 0.1f;
+                std::cout << "Aumentou a velocidade e agora ela é: " << velocity
+                          << '\n';
+              }
+              if (points % 200 == 0)
+              {
+                ++health;
+                std::cout << "Ganhou mais uma vida: " << health << '\n';
+              }
+            }
+          }
+
+          if (objs[i].getPosition().y > window.getSize().y)
+          {
+            --health;
+            life.setString("Vidas: " + std::to_string(health));
             del = true;
-            points += 10.f;
-            score.setString("Pontos: " + std::to_string(points));
-            pressed = true;
-            if (points % 100 == 0)
+            if (health <= 0)
             {
-              velocity += 0.1f;
-              std::cout << "Aumentou a velocidade e agora ela é: " << velocity
-                        << '\n';
-            }
-            if (points % 200 == 0)
-            {
-              ++health;
-              std::cout << "Ganhou mais uma vida: " << health << '\n';
+              std::cout << "Pontuação: " << points << '\n';
+              std::cout << "GAME OVER, Vidas: " << health << '\n';
+              // window.close();
+              gameover = true;
             }
           }
-        }
 
-        if (objs[i].getPosition().y > window.getSize().y)
-        {
-          --health;
-          life.setString("Vidas: " + std::to_string(health));
-          del = true;
-          if (health <= 0)
+          if (del)
           {
-            std::cout << "Pontuação: " << points << '\n';
-            std::cout << "GAME OVER, Vidas: " << health << '\n';
-            // window.close();
-            gameover = true;
+            objs.erase(objs.begin() + i);
           }
         }
 
-        if (del)
+        window.clear();
+        window.draw(fundo);
+        window.draw(score);
+        window.draw(life);
+        for (auto &e : objs)
         {
-          objs.erase(objs.begin() + i);
+          window.draw(e);
         }
-      }
-
-      window.clear();
-      window.draw(fundo);
-      window.draw(score);
-      window.draw(life);
-      for (auto &e : objs)
-      {
-        window.draw(e);
-      }
-      window.draw(ham);
-      window.display();
+        window.draw(ham);
+        window.display();
+      } // ELSE DO GAMEOVER
     }
 
   } // WHILE LOOP GAME PRINCIPAL
