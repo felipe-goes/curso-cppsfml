@@ -1,3 +1,4 @@
+#include "SFML/Graphics/Color.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <ctime>
@@ -14,14 +15,26 @@ int main()
   window.setPosition(sf::Vector2i(0, 0));
   window.setMouseCursorVisible(false);
 
-  bool pressed = false;
+  bool pressed = false, gameover = false;
   int points{}, health = 5; // maneira moderna de inicializar com 0
   float velocity = 5.f;
 
-  sf::Font font;
-
+  sf::Font font, jet;
   font.loadFromFile("../resources/fonts/Minecraft.ttf");
-  sf::Text score, life;
+  jet.loadFromFile("../resources/fonts/jetbrains.ttf");
+  sf::Text score, life, gameover_text, f1;
+
+  f1.setFont(jet);
+  f1.setFillColor(sf::Color::Yellow);
+  f1.setPosition(600, 10);
+  f1.setString("Pressione F1 para um novo jogo.");
+
+  // gameover
+  gameover_text.setFont(font);
+  gameover_text.setFillColor(sf::Color::White);
+  gameover_text.setString("GAME OVER");
+  gameover_text.setPosition(350, 300);
+  gameover_text.setCharacterSize(100);
 
   // score
   score.setFont(font);
@@ -90,81 +103,111 @@ int main()
       ham.setPosition(static_cast<sf::Vector2f>(pos_mouse_win));
     }
 
-    // Adicionar objects ao nosso vector com atrasos
-    if (objs.size() < max_objs)
+    if (gameover)
     {
-      if (obj_vel >= obj_vel_max)
-      {
-        x = static_cast<float>(std::experimental::randint(
-          10, static_cast<int>(window.getSize().x - texture.getSize().x)));
-        object.setPosition(x, 0.f);
-        objs.push_back(object);
-        obj_vel = 0.f;
-      }
-      else
-      {
-        obj_vel += 1.f;
-      }
-    }
+      window.setMouseCursorVisible(true);
+      window.clear(sf::Color::Black);
+      window.draw(score);
+      window.draw(f1);
+      window.draw(gameover_text);
+      window.display();
 
-    // Mover e deletar os objetos do vetor
-    for (int i{}; i < objs.size(); ++i)
-    {
-      bool del = false;
-      objs[i].move(0.f, velocity);
-
-      if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !pressed)
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
       {
-        if (objs[i].getGlobalBounds().contains(pos_mouse_coord))
-        {
-          del = true;
-          points += 10.f;
-          score.setString("Pontos: " + std::to_string(points));
-          pressed = true;
-          if (points % 100 == 0)
-          {
-            velocity += 0.1f;
-            std::cout << "Aumentou a velocidade e agora ela é: " << velocity
-                      << '\n';
-          }
-          if (points % 200 == 0)
-          {
-            ++health;
-            std::cout << "Ganhou mais uma vida: " << health << '\n';
-          }
-        }
-      }
+        objs.clear();
 
-      if (objs[i].getPosition().y > window.getSize().y)
-      {
-        --health;
+        health = 5;
+        points = 0;
+        velocity = 5.f;
+
+        score.setString("Pontos: " + std::to_string(points));
         life.setString("Vidas: " + std::to_string(health));
-        del = true;
-        if (health <= 0)
+
+        window.setMouseCursorVisible(false);
+        gameover = false;
+      }
+    }
+    else
+    {
+      // CÓDIGO DO GAME
+      // Adicionar objects ao nosso vector com atrasos
+      if (objs.size() < max_objs)
+      {
+        if (obj_vel >= obj_vel_max)
         {
-          std::cout << "Pontuação: " << points << '\n';
-          std::cout << "GAME OVER, Vidas: " << health << '\n';
-          window.close();
+          x = static_cast<float>(std::experimental::randint(
+            10, static_cast<int>(window.getSize().x - texture.getSize().x)));
+          object.setPosition(x, 0.f);
+          objs.push_back(object);
+          obj_vel = 0.f;
+        }
+        else
+        {
+          obj_vel += 1.f;
         }
       }
 
-      if (del)
+      // Mover e deletar os objetos do vetor
+      for (int i{}; i < objs.size(); ++i)
       {
-        objs.erase(objs.begin() + i);
+        bool del = false;
+        objs[i].move(0.f, velocity);
+
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !pressed)
+        {
+          if (objs[i].getGlobalBounds().contains(pos_mouse_coord))
+          {
+            del = true;
+            points += 10.f;
+            score.setString("Pontos: " + std::to_string(points));
+            pressed = true;
+            if (points % 100 == 0)
+            {
+              velocity += 0.1f;
+              std::cout << "Aumentou a velocidade e agora ela é: " << velocity
+                        << '\n';
+            }
+            if (points % 200 == 0)
+            {
+              ++health;
+              std::cout << "Ganhou mais uma vida: " << health << '\n';
+            }
+          }
+        }
+
+        if (objs[i].getPosition().y > window.getSize().y)
+        {
+          --health;
+          life.setString("Vidas: " + std::to_string(health));
+          del = true;
+          if (health <= 0)
+          {
+            std::cout << "Pontuação: " << points << '\n';
+            std::cout << "GAME OVER, Vidas: " << health << '\n';
+            // window.close();
+            gameover = true;
+          }
+        }
+
+        if (del)
+        {
+          objs.erase(objs.begin() + i);
+        }
       }
+
+      window.clear();
+      window.draw(fundo);
+      window.draw(score);
+      window.draw(life);
+      for (auto &e : objs)
+      {
+        window.draw(e);
+      }
+      window.draw(ham);
+      window.display();
     }
 
-    window.clear();
-    window.draw(fundo);
-    window.draw(score);
-    window.draw(life);
-    for (auto &e : objs)
-    {
-      window.draw(e);
-    }
-    window.draw(ham);
-    window.display();
-  }
+  } // WHILE LOOP GAME PRINCIPAL
 
   // Maneira correta de deletar um ponteiro na Heap
   // delete ponteiro;
