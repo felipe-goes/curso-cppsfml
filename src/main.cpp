@@ -40,6 +40,24 @@ int main()
                        enemy->getGlobalBounds().height);
   enemies.push_back(*enemy);
 
+  // power
+  auto power_texture = std::make_shared<sf::Texture>();
+  power_texture->loadFromFile("./resources/imgs/power-life.png");
+  auto power = std::make_shared<sf::Sprite>(*power_texture);
+  power->setPosition(window->getSize().x - power_texture->getSize().x - 10.f,
+                     10.f);
+  int start = 0;
+  power->setTextureRect(sf::IntRect(0, start, 300, 30));
+
+  // game over font
+  auto font = std::make_shared<sf::Font>();
+  font->loadFromFile("./resources/fonts/digital.ttf");
+  auto text = std::make_shared<sf::Text>();
+  text->setFont(*font);
+  text->setString("GAME OVER");
+  text->setFillColor(sf::Color::White);
+  text->setPosition(window->getSize().x - 150.f, 10.f);
+
   while (window->isOpen())
   {
     sf::Event event;
@@ -151,12 +169,14 @@ int main()
       if (enemies[i].getGlobalBounds().intersects(spaceship->getGlobalBounds()))
       {
         enemies.erase(enemies.begin() + i);
-        // spaceship->setColor(sf::Color::Red);
+        start += 30;
+        power->setTextureRect(sf::IntRect(0, start, 300, 30));
       }
     }
 
     window->clear();
     window->draw(*bg);
+    start < 120 ? window->draw(*power) : window->draw(*text);
     window->draw(*spaceship);
     window->draw(*enemy);
     for (auto &b : bullets)
