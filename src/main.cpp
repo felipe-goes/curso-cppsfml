@@ -58,6 +58,15 @@ int main()
   text->setFillColor(sf::Color::White);
   text->setPosition(window->getSize().x - 150.f, 10.f);
 
+  // animation
+  auto exp_texture = std::make_shared<sf::Texture>();
+  exp_texture->loadFromFile("./resources/imgs/explosion.png");
+  auto explosion = std::make_shared<sf::Sprite>(*exp_texture);
+  explosion->setTextureRect(sf::IntRect(0, 0, 80, 97));
+  float frame = 0, anim_speed = 0.4f;
+  float count = 13, max = 0;
+  bool show = true;
+
   while (window->isOpen())
   {
     sf::Event event;
@@ -127,20 +136,25 @@ int main()
     }
 
     // Mover e deletar caso ultrapasse os limites da janela
-    for (int i{}; i < bullets.size(); ++i)
+    for (size_t i{}; i < bullets.size(); ++i)
     {
       bullets[i].move(60.f, 0.f);
       if (bullets[i].getPosition().x > window->getSize().x)
       {
         bullets.erase(bullets.begin() + i);
       }
-      for (int k{}; k < enemies.size(); ++k)
+      for (size_t k{}; k < enemies.size(); ++k)
       {
         if (bullets[i].getGlobalBounds().intersects(
               enemies[k].getGlobalBounds()))
         {
-          bullets.erase(bullets.begin() + i);
           enemies.erase(enemies.begin() + k);
+          bullets.erase(bullets.begin() + i);
+          show = false;
+          max = 0;
+          explosion->setPosition(bullets[i].getPosition().x,
+                                 bullets[i].getPosition().y -
+                                   bullet_texture->getSize().y);
         }
       }
     }
@@ -152,14 +166,14 @@ int main()
     }
     if (spawn_enemies >= 20)
     {
-      enemy->setPosition(window->getSize().x - enemy->getGlobalBounds().width,
+      enemy->setPosition(window->getSize().x,
                          std::rand() % window->getSize().y -
                            enemy->getGlobalBounds().height);
       enemies.push_back(*enemy);
       spawn_enemies = 0;
     }
 
-    for (int i{}; i < enemies.size(); i++)
+    for (size_t i{}; i < enemies.size(); i++)
     {
       enemies[i].move(-10.f, 0.f);
       if (enemies[i].getPosition().x < 0)
@@ -174,6 +188,18 @@ int main()
       }
     }
 
+    // ANIMATION
+    if (max <= 1040.f && !show)
+    {
+      frame += anim_speed;
+      if (frame > count)
+      {
+        frame = 0.f;
+      }
+      explosion->setTextureRect(sf::IntRect((int)frame * 80, 0, 80, 97));
+    }
+    max = max + 80;
+
     window->clear();
     window->draw(*bg);
     start < 120 ? window->draw(*power) : window->draw(*text);
@@ -186,6 +212,10 @@ int main()
     for (auto &e : enemies)
     {
       window->draw(e);
+    }
+    if (max <= 1040 && !show)
+    {
+      window->draw(*explosion);
     }
     window->display();
   }
