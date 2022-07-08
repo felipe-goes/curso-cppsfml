@@ -3,6 +3,8 @@
 
 int main()
 {
+  std::srand(std::time(nullptr));
+
   std::shared_ptr<sf::RenderWindow> window = std::make_shared<sf::RenderWindow>(
     sf::VideoMode(1280, 720), "Spaceship 1.0",
     sf::Style::Titlebar | sf::Style::Close);
@@ -21,13 +23,22 @@ int main()
   auto bullet_texture = std::make_shared<sf::Texture>();
   bullet_texture->loadFromFile("./resources/imgs/bullet.png");
   auto bullet = std::make_shared<sf::Sprite>(*bullet_texture);
-  std::vector<sf::Sprite> bullets;
-  int shoot = 20;
+  std::vector<sf::Sprite> bullets, enemies;
+  int shoot = 20, spawn_enemies = 1;
 
   // background
   auto bg_texture = std::make_shared<sf::Texture>();
   bg_texture->loadFromFile("./resources/imgs/bg.jpg");
   auto bg = std::make_shared<sf::Sprite>(*bg_texture);
+
+  // enemies
+  auto enemy_texture = std::make_shared<sf::Texture>();
+  enemy_texture->loadFromFile("./resources/imgs/enemy-min.png");
+  auto enemy = std::make_shared<sf::Sprite>(*enemy_texture);
+  enemy->setPosition(window->getSize().x - enemy->getGlobalBounds().width,
+                     std::rand() % window->getSize().y -
+                       enemy->getGlobalBounds().height);
+  enemies.push_back(*enemy);
 
   while (window->isOpen())
   {
@@ -83,7 +94,6 @@ int main()
     }
 
     // BULLET
-
     if (shoot < 20)
     {
       shoot++;
@@ -106,14 +116,56 @@ int main()
       {
         bullets.erase(bullets.begin() + i);
       }
+      for (int k{}; k < enemies.size(); ++k)
+      {
+        if (bullets[i].getGlobalBounds().intersects(
+              enemies[k].getGlobalBounds()))
+        {
+          bullets.erase(bullets.begin() + i);
+          enemies.erase(enemies.begin() + k);
+        }
+      }
+    }
+
+    // ENEMIES
+    if (spawn_enemies < 20)
+    {
+      spawn_enemies++;
+    }
+    if (spawn_enemies >= 20)
+    {
+      enemy->setPosition(window->getSize().x - enemy->getGlobalBounds().width,
+                         std::rand() % window->getSize().y -
+                           enemy->getGlobalBounds().height);
+      enemies.push_back(*enemy);
+      spawn_enemies = 0;
+    }
+
+    for (int i{}; i < enemies.size(); i++)
+    {
+      enemies[i].move(-10.f, 0.f);
+      if (enemies[i].getPosition().x < 0)
+      {
+        enemies.erase(enemies.begin() + i);
+      }
+      if (enemies[i].getGlobalBounds().intersects(spaceship->getGlobalBounds()))
+      {
+        enemies.erase(enemies.begin() + i);
+        // spaceship->setColor(sf::Color::Red);
+      }
     }
 
     window->clear();
     window->draw(*bg);
     window->draw(*spaceship);
-    for(auto &b : bullets)
+    window->draw(*enemy);
+    for (auto &b : bullets)
     {
       window->draw(b);
+    }
+    for (auto &e : enemies)
+    {
+      window->draw(e);
     }
     window->display();
   }
