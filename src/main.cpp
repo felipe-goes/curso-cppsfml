@@ -21,8 +21,13 @@ int main()
   auto bullet_texture = std::make_shared<sf::Texture>();
   bullet_texture->loadFromFile("./resources/imgs/bullet.png");
   auto bullet = std::make_shared<sf::Sprite>(*bullet_texture);
-  bullet->setColor(sf::Color::Red);
-  bool move_bullet = false;
+  std::vector<sf::Sprite> bullets;
+  int shoot = 20;
+
+  // background
+  auto bg_texture = std::make_shared<sf::Texture>();
+  bg_texture->loadFromFile("./resources/imgs/bg.jpg");
+  auto bg = std::make_shared<sf::Sprite>(*bg_texture);
 
   while (window->isOpen())
   {
@@ -35,7 +40,7 @@ int main()
       }
     }
 
-    // Movimento da nave
+    // Movimenta a spaceship com as teclas direcionais
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
     {
       spaceship->move(10.f, 0.f);
@@ -53,12 +58,7 @@ int main()
       spaceship->move(0.f, -10.f);
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-    {
-      move_bullet = true;
-    }
-
-    // Colisão com as bordas da tela
+    // Verifica se a nave(spaceship) ultrapassou os limites da janela
     if (spaceship->getPosition().x < 0)
     {
       spaceship->setPosition(0, spaceship->getPosition().y);
@@ -82,24 +82,39 @@ int main()
                                spaceship_texture->getSize().y);
     }
 
-    if (!move_bullet)
+    // BULLET
+
+    if (shoot < 20)
+    {
+      shoot++;
+    }
+    // Quando pressionar a tecla de espaço adiciona um bullet
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && shoot >= 20)
     {
       bullet->setPosition(spaceship->getPosition().x + 35.f,
                           spaceship->getPosition().y +
                             spaceship_texture->getSize().y / 2.f - 5.f);
+      bullets.push_back(*bullet);
+      shoot = 0;
     }
-    else
+
+    // Mover e deletar caso ultrapasse os limites da janela
+    for (int i{}; i < bullets.size(); ++i)
     {
-      bullet->move(20.f, 0.f);
-      if (bullet->getPosition().x > window->getSize().x - bullet_texture->getSize().x)
+      bullets[i].move(60.f, 0.f);
+      if (bullets[i].getPosition().x > window->getSize().x)
       {
-        move_bullet = false;
+        bullets.erase(bullets.begin() + i);
       }
     }
 
     window->clear();
+    window->draw(*bg);
     window->draw(*spaceship);
-    window->draw(*bullet);
+    for(auto &b : bullets)
+    {
+      window->draw(b);
+    }
     window->display();
   }
 
