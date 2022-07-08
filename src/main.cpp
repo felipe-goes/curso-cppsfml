@@ -9,13 +9,20 @@ int main()
   window->setPosition(sf::Vector2i(0, 0));
   window->setFramerateLimit(60);
 
+  // spaceship
   std::shared_ptr<sf::Texture> spaceship_texture =
     std::make_shared<sf::Texture>();
   spaceship_texture->loadFromFile("./resources/imgs/spaceship-min.png");
-
   std::shared_ptr<sf::Sprite> spaceship = std::make_shared<sf::Sprite>();
   spaceship->setTexture(*spaceship_texture);
   spaceship->setPosition(0, 0);
+
+  // bullet
+  auto bullet_texture = std::make_shared<sf::Texture>();
+  bullet_texture->loadFromFile("./resources/imgs/bullet.png");
+  auto bullet = std::make_shared<sf::Sprite>(*bullet_texture);
+  bullet->setColor(sf::Color::Red);
+  bool move_bullet = false;
 
   while (window->isOpen())
   {
@@ -46,6 +53,11 @@ int main()
       spaceship->move(0.f, -10.f);
     }
 
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+    {
+      move_bullet = true;
+    }
+
     // Colisão com as bordas da tela
     if (spaceship->getPosition().x < 0)
     {
@@ -70,8 +82,24 @@ int main()
                                spaceship_texture->getSize().y);
     }
 
+    if (!move_bullet)
+    {
+      bullet->setPosition(spaceship->getPosition().x + 35.f,
+                          spaceship->getPosition().y +
+                            spaceship_texture->getSize().y / 2.f - 5.f);
+    }
+    else
+    {
+      bullet->move(20.f, 0.f);
+      if (bullet->getPosition().x > window->getSize().x - bullet_texture->getSize().x)
+      {
+        move_bullet = false;
+      }
+    }
+
     window->clear();
     window->draw(*spaceship);
+    window->draw(*bullet);
     window->display();
   }
 
