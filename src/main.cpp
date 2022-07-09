@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 
-const int H = 23, W = 80 / 2;
+const int H = 23, W = 80; // tiramos a divisão por conta do offset
+float offset_x = 0.f, offset_y = 0.f;
 
 sf::String tilemap[H] = {
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
@@ -42,8 +43,8 @@ public:
     sprite.setTexture(texture);
     sprite.setTextureRect(sf::IntRect(0, 0, 43, 82));
     rect = sf::FloatRect(64, ground, 43, 82);
-    dx = 0.f;
-    dy = 0.f;
+    dx = 0.1f;
+    dy = 0.1f;
     frame = 0.f;
     on_ground = false;
   }
@@ -72,7 +73,7 @@ public:
       on_ground = true;
     }
 
-    frame += 0.5f * time;
+    frame += 0.3f * time;
     if (frame > 6.f)
     {
       frame -= 6.f;
@@ -89,8 +90,8 @@ public:
       sprite.setTextureRect(sf::IntRect(43 * (int)frame + 43, 0, -43, 82));
     }
 
-    sprite.setPosition(rect.left,
-                       rect.top); // dx e o dy os de movimento verdadeiros foram
+    sprite.setPosition(rect.left - offset_x,
+                       rect.top - offset_y); // dx e o dy os de movimento verdadeiros foram
                                   // armazenados em rect.left e rect.top
     dx = 0; // Para ele movimentar a cada vez que a gente teclar as setas, caso
             // contrário ele ficará andando sequencialmente
@@ -203,6 +204,16 @@ int main()
 
     player.update(time);
 
+    // TODO: remover espaço final do offset
+    if (player.rect.left > (float)window.getSize().x/2.f)
+    {
+      offset_x = player.rect.left - window.getSize().x / 2.f;
+    }
+    if (player.rect.top < (float)window.getSize().y/2.f)
+    {
+      offset_y = player.rect.top - window.getSize().y / 2.f;
+    }
+
     window.clear(sf::Color::Yellow);
     window.draw(bg);
 
@@ -223,7 +234,7 @@ int main()
           continue;
         }
 
-        rectangle.setPosition(j * 32, i * 32);
+        rectangle.setPosition(j * 32 - offset_x, i * 32 - offset_y);
         window.draw(rectangle);
       }
     }
