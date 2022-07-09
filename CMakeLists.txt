@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.23.1 FATAL_ERROR)
-project(cpp-sfml VERSION 1.0)
+project(afrosamurai VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -17,7 +17,7 @@ find_library(NETWORK sfml-network libs)
 find_library(SFMLSYSTEM sfml-system libs)
 find_library(WINDOW sfml-window libs)
 
-target_link_libraries(cpp-sfml
+target_link_libraries(afrosamurai
   PRIVATE
     ${AUDIO}
     ${GRAPHICS}

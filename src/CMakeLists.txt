@@ -1,4 +1,4 @@
-add_executable(cpp-sfml main.cpp)
+add_executable(afrosamurai main.cpp)
 
 include_directories(include)
 
@@ -9,7 +9,7 @@ include_directories(include)
 #     Game.cpp
 #   )
 #
-# target_link_libraries(cpp-sfml
+# target_link_libraries(afrosamurai
 #   PRIVATE
 #     game
 #   )
