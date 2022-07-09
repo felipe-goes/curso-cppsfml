@@ -1,6 +1,6 @@
 #include <SFML/Graphics.hpp>
 
-const int H = 23, W = 80/2;
+const int H = 23, W = 80 / 2;
 
 sf::String tilemap[H] = {
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
@@ -11,20 +11,20 @@ sf::String tilemap[H] = {
 "B                                B                                       B     B",
 "B                                B                                       B     B",
 "B                                B                                       B     B",
+"B          0                     B                                       B     B",
 "B                                B                                       B     B",
 "B                                B                                       B     B",
+"B        BBBB                    B                                       B     B",
 "B                                B                                       B     B",
+"B                   BBBBB      0 B                                       B     B",
 "B                                B                                       B     B",
-"B                                B                                       B     B",
-"B                                B                                       B     B",
-"B                                B                                       B     B",
-"B         0000                BBBB                0000                BBBB     B",
+"B         0 0 0 0             BBBB                0000                BBBB     B",
 "B                                B                                       B     B",
 "BBB                              B       BB                              B     B",
 "B              BB                BB    BB              BB              BBBB    B",
-"B              BB                      BB              BB                      B",
+"B        0     BB         BB           BB              BB                      B",
 "B    B         BB         BB           BB    B         BB         BB           B",
-"B    B         BB         BB           BB    B         BB         BB           B",
+"B    B         BB    0    BB           BB    B         BB         BB           B",
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
 };
 
@@ -41,7 +41,7 @@ public:
   {
     sprite.setTexture(texture);
     sprite.setTextureRect(sf::IntRect(0, 0, 43, 82));
-    rect = sf::FloatRect(0, ground, 43, 82);
+    rect = sf::FloatRect(64, ground, 43, 82);
     dx = 0.f;
     dy = 0.f;
     frame = 0.f;
@@ -53,6 +53,7 @@ public:
     // PULO/GRAVIDADE
     // Para usar no setPosition
     rect.left += dx * time;
+    collision(1);
     rect.top += dy * time;
 
     if (!on_ground)
@@ -62,6 +63,7 @@ public:
     }
 
     on_ground = false; // Para ele não ficar voando
+    collision(0);
 
     if (rect.top > ground) // Para ele não passar do chão
     {
@@ -93,6 +95,53 @@ public:
     dx = 0; // Para ele movimentar a cada vez que a gente teclar as setas, caso
             // contrário ele ficará andando sequencialmente
   }
+
+  void collision(int direction)
+  {
+    for (size_t i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
+    {
+      for (size_t j = rect.left / 32; j < (rect.left + rect.width) / 32; j++)
+      {
+        if (tilemap[i][j] == 'B')
+        {
+          // PARA o X
+          if (direction == 1)
+          {
+            if (dx > 0)
+            {
+              rect.left = j * 32 - rect.width;
+            }
+            if (dx < 0)
+            {
+              rect.left = j * 32 + 32;
+            }
+          }
+          // PARA o Y
+          if (direction == 0)
+          {
+            if (dy > 0)
+            {
+              rect.top = i * 32 - rect.height;
+              dy = 0;
+              on_ground = true;
+            }
+            if (dy < 0)
+            {
+              rect.top = i * 32 + 32;
+              dy = 0;
+            }
+          }
+        }
+
+        if (tilemap[i][j] == '0')
+        {
+          tilemap[i][j] = ' ';
+        }
+
+      }
+    }
+  }
+
 };
 
 int main()
@@ -157,8 +206,10 @@ int main()
     window.clear(sf::Color::Yellow);
     window.draw(bg);
 
-    for (size_t i{}; i < H; i++) {
-      for (size_t j{}; j < W; j++) {
+    for (size_t i{}; i < H; i++)
+    {
+      for (size_t j{}; j < W; j++)
+      {
         if (tilemap[i][j] == 'B')
         {
           rectangle.setFillColor(sf::Color::Black);
@@ -172,7 +223,7 @@ int main()
           continue;
         }
 
-        rectangle.setPosition(j*32, i*32);
+        rectangle.setPosition(j * 32, i * 32);
         window.draw(rectangle);
       }
     }
