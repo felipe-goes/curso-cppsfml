@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <iostream>
 
 const int H = 23, W = 80; // tiramos a divisão por conta do offset
 float offset_x = 0.f, offset_y = 0.f;
@@ -23,9 +24,9 @@ sf::String tilemap[H] = {
 "B                                B                                       B     B",
 "BBB                              B       BB                              B     B",
 "B              BB                BB    BB              BB              BBBB    B",
-"B        0     BB         BB           BB              BB                      B",
-"B    B         BB         BB           BB    B         BB         BB           B",
-"B    B         BB    0    BB           BB    B         BB         BB           B",
+"B        0     BB         BB           BB              BB                      X",
+"B    B         BB         BB           BB    B         BB         BB           X",
+"B    B         BB    0    BB           BB    B         BB         BB           X",
 "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
 };
 
@@ -37,16 +38,18 @@ public:
   bool on_ground;
   sf::FloatRect rect;
   sf::Sprite sprite;
+  bool fase_1;
 
   Player(sf::Texture &texture)
   {
     sprite.setTexture(texture);
     sprite.setTextureRect(sf::IntRect(0, 0, 43, 82));
     rect = sf::FloatRect(64, ground, 43, 82);
-    dx = 0.1f;
-    dy = 0.1f;
+    dx = 0.f;
+    dy = 0.f;
     frame = 0.f;
     on_ground = false;
+    fase_1 = false;
   }
 
   void update(float time)
@@ -139,6 +142,11 @@ public:
           tilemap[i][j] = ' ';
         }
 
+        if (tilemap[i][j] == 'X')
+        {
+          fase_1 = true;
+        }
+
       }
     }
   }
@@ -153,14 +161,13 @@ int main()
 
   const float height_floor = 32.f, speed = 0.4f;
 
-  sf::Texture texture, floor_texture, bg_texture;
+  sf::Texture texture, bg_texture, box, points, fase;
   texture.loadFromFile("./resources/imgs/afro.png");
-  floor_texture.loadFromFile("./resources/imgs/floormax.jpg");
-  bg_texture.loadFromFile("./resources/imgs/bg.jpg");
-  sf::Sprite floor(floor_texture), bg(bg_texture);
-
-  // floor
-  floor.setPosition(0.f, window.getSize().y - height_floor);
+  bg_texture.loadFromFile("./resources/imgs/bgnew.jpg");
+  box.loadFromFile("./resources/imgs/box.jpg");
+  points.loadFromFile("./resources/imgs/points.png");
+  fase.loadFromFile("./resources/imgs/floor.jpg");
+  sf::Sprite bg(bg_texture);
 
   sf::RectangleShape rectangle(sf::Vector2f(height_floor, height_floor));
 
@@ -209,10 +216,10 @@ int main()
     {
       offset_x = player.rect.left - window.getSize().x / 2.f;
     }
-    if (player.rect.top < (float)window.getSize().y/2.f)
-    {
-      offset_y = player.rect.top - window.getSize().y / 2.f;
-    }
+    // if (player.rect.top < (float)window.getSize().y/2.f)
+    // {
+    //   offset_y = player.rect.top - window.getSize().y / 2.f;
+    // }
 
     window.clear(sf::Color::Yellow);
     window.draw(bg);
@@ -223,15 +230,20 @@ int main()
       {
         if (tilemap[i][j] == 'B')
         {
-          rectangle.setFillColor(sf::Color::Black);
+          rectangle.setTexture(&box);
         }
         if (tilemap[i][j] == '0')
         {
-          rectangle.setFillColor(sf::Color::Blue);
+          rectangle.setTexture(&points);
         }
         if (tilemap[i][j] == ' ')
         {
           continue;
+        }
+
+        if (tilemap[i][j] == 'X')
+        {
+          rectangle.setTexture(&fase);
         }
 
         rectangle.setPosition(j * 32 - offset_x, i * 32 - offset_y);
@@ -239,7 +251,11 @@ int main()
       }
     }
 
-    window.draw(floor);
+    if (player.fase_1)
+    {
+      std::cout << "PASSOU DA FASE 1 --------------" << '\n';
+      window.close();
+    }
     window.draw(player.sprite);
     window.display();
   }
