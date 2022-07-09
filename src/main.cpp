@@ -1,9 +1,37 @@
 #include <SFML/Graphics.hpp>
 
+const int H = 23, W = 80/2;
+
+sf::String tilemap[H] = {
+"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B                                B                                       B     B",
+"B         0000                BBBB                0000                BBBB     B",
+"B                                B                                       B     B",
+"BBB                              B       BB                              B     B",
+"B              BB                BB    BB              BB              BBBB    B",
+"B              BB                      BB              BB                      B",
+"B    B         BB         BB           BB    B         BB         BB           B",
+"B    B         BB         BB           BB    B         BB         BB           B",
+"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+};
+
 class Player
 {
 public:
-  const int ground = 720 - (82 + 100);
+  const int ground = 736 - (82 + 32);
   float dx, dy, frame;
   bool on_ground;
   sf::FloatRect rect;
@@ -69,11 +97,11 @@ public:
 
 int main()
 {
-  sf::RenderWindow window(sf::VideoMode(1280, 720), "Plataforma 2D",
+  sf::RenderWindow window(sf::VideoMode(1280, 736), "Plataforma 2D",
                           sf::Style::Close | sf::Style::Titlebar);
   window.setPosition(sf::Vector2i(0, 0));
 
-  const float height_floor = 100.f, speed = 0.4f;
+  const float height_floor = 32.f, speed = 0.4f;
 
   sf::Texture texture, floor_texture, bg_texture;
   texture.loadFromFile("./resources/imgs/afro.png");
@@ -83,6 +111,8 @@ int main()
 
   // floor
   floor.setPosition(0.f, window.getSize().y - height_floor);
+
+  sf::RectangleShape rectangle(sf::Vector2f(height_floor, height_floor));
 
   Player player(texture);
 
@@ -126,6 +156,27 @@ int main()
 
     window.clear(sf::Color::Yellow);
     window.draw(bg);
+
+    for (size_t i{}; i < H; i++) {
+      for (size_t j{}; j < W; j++) {
+        if (tilemap[i][j] == 'B')
+        {
+          rectangle.setFillColor(sf::Color::Black);
+        }
+        if (tilemap[i][j] == '0')
+        {
+          rectangle.setFillColor(sf::Color::Blue);
+        }
+        if (tilemap[i][j] == ' ')
+        {
+          continue;
+        }
+
+        rectangle.setPosition(j*32, i*32);
+        window.draw(rectangle);
+      }
+    }
+
     window.draw(floor);
     window.draw(player.sprite);
     window.display();
